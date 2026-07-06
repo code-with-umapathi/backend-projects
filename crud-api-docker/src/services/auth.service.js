@@ -1,7 +1,8 @@
 const userRepositories = require("../repositories/user.repositories");
 const bcrypt = require("bcrypt");
 const ConflictError = require("../errors/ConflictError");
-const ValidationError = require("../errors/ValidationError");
+const UnauthorizedError = require("../errors/UnauthorizedError");
+const { generateAccessToken } = require("../utils/jwt");
 class AuthService {
     async register(data) {
         const { name, email, password } = data;
@@ -17,6 +18,19 @@ class AuthService {
         const user = await userRepositories.getById(userId);
         return user;
     }
-    
+    async login(data) {
+        const { email, password } = data;
+        const user = await userRepositories.getByEmail(email);
+        if (!user) {
+            throw new UnauthorizedError("Invalid email or password");
+        }
+        const isValid = await bcrypt.compare(password, user.password);
+        if (!isValid) {
+            throw new UnauthorizedError("Invalid email or password");
+        }
+        const payload = { sub: user.id };
+        const accessToken = generateAccessToken(payload);
+        return { accessToken };
+    }
 }
 module.exports = new AuthService();

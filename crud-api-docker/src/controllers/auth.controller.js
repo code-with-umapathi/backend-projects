@@ -8,5 +8,13 @@ class AuthController {
             data: user
         });
     }
+    async login(req, res) {
+        const { accessToken } = await authServices.login(req.body);
+        return res.status(200).json({
+            success: true,
+            message: "Login successfully",
+            data: { accessToken }
+        });
+    }
 }
 module.exports = new AuthController();

@@ -17,7 +17,7 @@ class UserRepositories {
         return rows[0] || null;
     }
     async getByEmail(email) {
-        const [rows] = await pool.execute(`select id, name, email, created_at from users where email = ?`, [email]);
+        const [rows] = await pool.execute(`select id, name, email, password, created_at from users where email = ?`, [email]);
         return rows[0] || null;
     }
     async delete(id) {
