@@ -1,9 +1,16 @@
 const userRepositories = require("../repositories/user.repositories");
 const ValidtionError = require("../errors/ValidationError");
+const ConflictError = require("../errors/ConflictError");
+const bcrypt = require("bcrypt");
 class UserService {
     async create(data) {
-        const { name, email } = data;
-        const userId = await userRepositories.create(name, email);
+        const { name, email, password } = data;
+        const user = await userRepositories.getByEmail(email);
+        if (user) {
+            throw new ConflictError("User already exists");
+        }
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const userId = await userRepositories.create(name, email, hashedPassword);
         if (!userId) {
             throw new ValidtionError("User not registered successfully");
         }
@@ -46,7 +53,7 @@ class UserService {
             throw new ValidtionError("User not exist");
         }
         const isDeleted = await userRepositories.delete(id);
-        if(isDeleted === 0){
+        if (isDeleted === 0) {
             throw new ValidtionError("User not deleted");
         }
     }

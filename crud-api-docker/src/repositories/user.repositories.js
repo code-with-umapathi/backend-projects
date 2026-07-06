@@ -1,7 +1,7 @@
 const { pool } = require("../config/db");
 class UserRepositories {
-    async create(name, email) {
-        const [result] = await pool.execute(`insert into users(name, email) values(?,?)`, [name, email]);
+    async create(name, email, password) {
+        const [result] = await pool.execute(`insert into users(name, email, password) values(?,?,?)`, [name, email, password]);
         return result.insertId;
     }
     async update(id, name, email) {
