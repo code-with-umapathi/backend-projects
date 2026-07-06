@@ -5,11 +5,11 @@ const bcrypt = require("bcrypt");
 class UserService {
     async create(data) {
         const { name, email, password } = data;
-        const user = await userRepositories.getByEmail(email);
-        if (user) {
+        const existUser = await userRepositories.getByEmail(email);
+        if (existUser) {
             throw new ConflictError("User already exists");
         }
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(String(password), 10);
         const userId = await userRepositories.create(name, email, hashedPassword);
         if (!userId) {
             throw new ValidtionError("User not registered successfully");
