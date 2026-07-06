@@ -49,7 +49,6 @@ class UserService {
         if(isDeleted === 0){
             throw new ValidtionError("User not deleted");
         }
-        return true;
     }
 }
 module.exports = new UserService();
