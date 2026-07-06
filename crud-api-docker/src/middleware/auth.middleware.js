@@ -16,7 +16,7 @@ function authMiddleware(req, res, next) {
     try {
         payload = jwt.verify(token, process.env.JWT_SECRET);
     } catch (err) {
-        throw new UnauthorizedError("Invlalid ot expire token");
+        throw new UnauthorizedError("Invlalid or expire token");
     }
     req.user = {
         id: payload.sub

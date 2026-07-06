@@ -1,10 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/user.controller");
+const authMiddleware = require("../middleware/auth.middleware");
 const asyncHandler = require("../utils/asyncHandler");
+const authorizationMiddleware = require("../middleware/authorization.middleware");
 router.get("/", asyncHandler(userController.getAll));
 router.post("/", asyncHandler(userController.create));
 router.get("/:id", asyncHandler(userController.getById));
 router.put("/:id", asyncHandler(userController.update));
 router.delete("/:id", userController.delete);
+router.get("/protected/test", authMiddleware, authorizationMiddleware("ADMIN"), (req, res) => { res.send("test") });
 module.exports = router;
