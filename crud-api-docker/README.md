@@ -168,7 +168,7 @@ Success Response
 ## Installation
 
 ```bash
-git clone https://github.com/your-username/user-management-api.git
+git clone https://github.com/code-with-umapathi/backend-projects.git
 ```
 
 Install dependencies
@@ -183,9 +183,9 @@ Create environment file
 PORT=3000
 
 DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=password
-DB_NAME=crud
+DB_USER=your_username
+DB_PASSWORD=your_password
+DB_NAME=register
 
 ```
 
