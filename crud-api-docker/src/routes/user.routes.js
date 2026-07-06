@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const userController = require("../controller/user.controller");
+const userController = require("../controllers/user.controller");
 const asyncHandler = require("../utils/asyncHandler");
 router.get("/", asyncHandler(userController.getAll));
 router.post("/", asyncHandler(userController.create));
