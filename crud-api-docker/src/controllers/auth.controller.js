@@ -9,7 +9,7 @@ class AuthController {
         });
     }
     async login(req, res) {
-        const { accessToken } = await authServices.login(req.body);
+        const { accessToken, refreshToken } = await authServices.login(req.body);
         return res.status(200).json({
             success: true,
             message: "Login successfully",

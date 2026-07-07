@@ -1,8 +1,10 @@
 const userRepositories = require("../repositories/user.repositories");
+const refreshTokenRepository = require("../repositories/refreshToken.repositories");
 const bcrypt = require("bcrypt");
 const ConflictError = require("../errors/ConflictError");
 const UnauthorizedError = require("../errors/UnauthorizedError");
-const { generateAccessToken } = require("../utils/jwt");
+const { generateAccessToken, generateRefreshToken, calculateRefreshExpiry } = require("../utils/jwt");
+const crypto = require("crypto");
 class AuthService {
     async register(data) {
         const { name, email, password } = data;
@@ -29,8 +31,13 @@ class AuthService {
             throw new UnauthorizedError("Invalid email or password");
         }
         const payload = { sub: user.id };
+        const refreshPayload = { sub: user.id };
         const accessToken = generateAccessToken(payload);
-        return { accessToken };
+        const refreshToken = generateRefreshToken(refreshPayload);
+        const hashedRefreshToken = crypto.createHash("sha256").update(refreshToken).digest("hex");
+        const expiresAt = calculateRefreshExpiry();
+        await refreshTokenRepository.create(user.id, hashedRefreshToken, expiresAt);
+        return { accessToken, refreshToken };
     }
 }
 module.exports = new AuthService();
