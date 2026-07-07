@@ -3,8 +3,9 @@ const refreshTokenRepository = require("../repositories/refreshToken.repositorie
 const bcrypt = require("bcrypt");
 const ConflictError = require("../errors/ConflictError");
 const UnauthorizedError = require("../errors/UnauthorizedError");
-const { generateAccessToken, generateRefreshToken, calculateRefreshExpiry } = require("../utils/jwt");
-const crypto = require("crypto");
+const { generateAccessToken, generateRefreshToken, calculateRefreshExpiry, hashRefreshToken, verifyRefreshToken } = require("../utils/jwt");
+const jwt = require("jsonwebtoken");
+const { pool } = require("../config/db");
 class AuthService {
     async register(data) {
         const { name, email, password } = data;
@@ -34,10 +35,55 @@ class AuthService {
         const refreshPayload = { sub: user.id };
         const accessToken = generateAccessToken(payload);
         const refreshToken = generateRefreshToken(refreshPayload);
-        const hashedRefreshToken = crypto.createHash("sha256").update(refreshToken).digest("hex");
-        const expiresAt = calculateRefreshExpiry();
-        await refreshTokenRepository.create(user.id, hashedRefreshToken, expiresAt);
+        await refreshTokenRepository.create(user.id, hashRefreshToken(refreshToken), calculateRefreshExpiry());
         return { accessToken, refreshToken };
+    }
+    async refresh(refreshToken) {
+        if (!refreshToken) {
+            throw new UnauthorizedError("Refresh token is missing");
+        }
+        const hashedRefreshToken = hashRefreshToken(refreshToken);
+        let payload;
+        try {
+            payload = verifyRefreshToken(refreshToken);
+        } catch (err) {
+            throw new UnauthorizedError("Invalid or expire token");
+        }
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+            const storedToken = await refreshTokenRepository.findByHash(hashedRefreshToken, connection);
+            if (!storedToken) {
+                throw new UnauthorizedError("Invalid or expire token");
+            }
+            const user = await userRepositories.getById(payload.sub, connection);
+            if (!user) {
+                throw new UnauthorizedError("User not found");
+            }
+            await refreshTokenRepository.deleteById(storedToken.id, connection);
+            const accessToken = generateAccessToken({ sub: user.id });
+            const newRefreshToken = generateRefreshToken({ sub: user.id });
+            const hashedNewRefreshToken = hashRefreshToken(newRefreshToken);
+            const expiresAt = calculateRefreshExpiry();
+            await refreshTokenRepository.create(user.id, hashedNewRefreshToken, expiresAt, connection);
+            await connection.commit();
+            return { accessToken, refreshToken: newRefreshToken };
+        } catch (err) {
+            await connection.rollback();
+            throw err;
+        } finally {
+            connection.release();
+        }
+    }
+    async logout(refreshToken) {
+        if (!refreshToken) {
+            return;
+        }
+        const hashedRefreshToken = hashRefreshToken(refreshToken);
+        await refreshTokenRepository.deleteByToken(hashedRefreshToken);
+    }
+    async logoutAllDevices(userId){
+        await refreshTokenRepository.deleteByUserId(userId);
     }
 }
 module.exports = new AuthService();

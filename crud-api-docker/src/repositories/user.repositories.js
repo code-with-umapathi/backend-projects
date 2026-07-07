@@ -12,8 +12,8 @@ class UserRepositories {
         const [rows] = await pool.execute(`select id, name, email, created_at from users`);
         return rows;
     }
-    async getById(id) {
-        const [rows] = await pool.execute(`select id, name, email, created_at from users where id = ?`, [id]);
+    async getById(id, connection = pool) {
+        const [rows] = await connection.execute(`select id, name, email, created_at from users where id = ?`, [id]);
         return rows[0] || null;
     }
     async getByEmail(email) {

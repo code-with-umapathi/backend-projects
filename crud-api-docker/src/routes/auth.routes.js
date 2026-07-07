@@ -1,6 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const authController = require("../controllers/auth.controller");
-router.post("/register", authController.register);
-router.post("/login", authController.login);
+const authMiddleware = require("../middleware/auth.middleware");
+const asyncHandler = require("../utils/asyncHandler");
+router.post("/register", asyncHandler(authController.register));
+router.post("/login", asyncHandler(authController.login));
+router.post("/refresh", asyncHandler(authController.refresh));
+router.post("/logout", asyncHandler(authController.logout));
+router.post("/logout-all", authMiddleware, asyncHandler(authController.logoutAllDevices));
 module.exports = router;
